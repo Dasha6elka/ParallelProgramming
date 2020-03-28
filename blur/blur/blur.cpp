@@ -3,12 +3,15 @@
 #include <fstream>
 #include <algorithm>
 #include <windows.h>
+#include <string>
 constexpr auto M_PI = 3.141592653589793238462643383279502884L;
 
 #pragma comment(lib, "winmm.lib")
 
 #undef min
 #undef max
+
+DWORD start = 0;
 
 typedef struct
 {
@@ -203,7 +206,8 @@ uint16_t bitmap::bitCount() const
 }
 
 struct Params {
-	bitmap* bmp;
+	bitmap* init_bmp;
+	bitmap* blur_bmp;
 	int number;
 	uint32_t startHeight;
 	uint32_t endHeight;
@@ -214,9 +218,10 @@ struct Params {
 	int countThreads;
 	int hRemaining;
 	int wRemaining;
+	std::ofstream* out;
 };
 
-void blur(bitmap* bmp, int radius, Params* params)
+void blur(bitmap* init_bmp, bitmap* blur_bmp, int radius, Params* params)
 {
 	float rs = ceil(radius * 2.57);
 	for (int i = params->startHeight; i < params->endHeight; ++i)
@@ -236,7 +241,7 @@ void blur(bitmap* bmp, int radius, Params* params)
 					auto dsq = ((ix - j) * (ix - j)) + ((iy - i) * (iy - i));
 					auto wght = std::exp(-dsq / (2.0 * radius * radius)) / (M_PI * 2.0 * radius * radius);
 
-					rgb32* pixel = bmp->getPixel(x, y);
+					rgb32* pixel = init_bmp->getPixel(x, y);
 
 					r += pixel->r * wght;
 					g += pixel->g * wght;
@@ -245,10 +250,12 @@ void blur(bitmap* bmp, int radius, Params* params)
 				}
 			}
 
-			rgb32* pixel = bmp->getPixel(j, i);
+			rgb32* pixel = blur_bmp->getPixel(j, i);
 			pixel->r = std::round(r / count);
 			pixel->g = std::round(g / count);
 			pixel->b = std::round(b / count);
+
+			*params->out << params->number << "   " << (int)(timeGetTime() - start) << std::endl;
 		}
 	}
 }
@@ -262,31 +269,36 @@ DWORD WINAPI ThreadProc(CONST LPVOID lpParam)
 		params->endHeight = (params->partHeight * (i + 1)) + (i == params->countThreads - 1 ? params->hRemaining : 0);
 		params->startWidth = params->number * params->partWidth;
 		params->endWidth = ((params->number + 1) * params->partWidth) + (params->number == params->countThreads - 1 ? params->wRemaining : 0);
-		blur(params->bmp, 5, params);
+		blur(params->init_bmp, params->blur_bmp, 5, params);
 	}
 	ExitThread(0); // функция устанавливает код завершения потока в 0
 }
 
-void threads_runner(bitmap* bmp, int radius, int threadsCount, int coreCount)
+void threads_runner(bitmap* init_bmp, bitmap* blur_bmp, int radius, int threadsCount, int coreCount, int* priorities)
 {
-	int partWidth = bmp->getWidth() / threadsCount;
-	int partHeight = bmp->getHeight() / threadsCount;
+	int partWidth = init_bmp->getWidth() / threadsCount;
+	int partHeight = init_bmp->getHeight() / threadsCount;
 
-	int w = bmp->getWidth() - partWidth * threadsCount;
+	int w = init_bmp->getWidth() - partWidth * threadsCount;
 	int widthRemaining = std::max(w, 0);
-	int h = bmp->getHeight() - partHeight * threadsCount;
+	int h = init_bmp->getHeight() - partHeight * threadsCount;
 	int heightRemaining = std::max(h, 0);
+
+	std::ofstream* files = new std::ofstream[threadsCount];
 
 	Params* arrayParams = new Params[threadsCount];
 	for (int i = 0; i < threadsCount; i++) {
+		files[i] = std::ofstream("out" + std::to_string(i) + ".txt");
 		Params params;
-		params.bmp = bmp;
+		params.init_bmp = init_bmp;
+		params.blur_bmp = blur_bmp;
 		params.partWidth = partWidth;
 		params.partHeight = partHeight;
 		params.countThreads = threadsCount;
 		params.number = i;
 		params.hRemaining = heightRemaining;
 		params.wRemaining = widthRemaining;
+		params.out = &files[i];
 		arrayParams[i] = params;
 	}
 
@@ -296,6 +308,7 @@ void threads_runner(bitmap* bmp, int radius, int threadsCount, int coreCount)
 	{
 		handles[i] = CreateThread(NULL, i, &ThreadProc, &arrayParams[i], CREATE_SUSPENDED, NULL);
 		SetThreadAffinityMask(handles[i], (1 << coreCount) - 1);
+		SetThreadPriority(handles[i], priorities[i]);
 	}
 
 	// запуск потоков
@@ -309,15 +322,35 @@ void threads_runner(bitmap* bmp, int radius, int threadsCount, int coreCount)
 
 int main(int argc, const char** argv)
 {
-	int start = timeGetTime();
+	start = timeGetTime();
 
-	bitmap bmp{ argv[1] };
+	if (strcmp(argv[1], "/") == 0) {
+		std::cout << "Example: /Users/Dasha6elka/Desktop/leaf.bmp /Users/Dasha6elka/Desktop/blurred-leaf.bmp 3 3 0 0 0" << std::endl;
+		std::cout << "1 argument - input bmp file" << std::endl;
+		std::cout << "1 argument - output bmp file" << std::endl;
+		std::cout << "3 argument - threads count" << std::endl;
+		std::cout << "4 argument - core count" << std::endl;
+		std::cout << "Priority: `-1` - below_normal; `0` - normal; `1` - above_normal" << std::endl;
+		std::cout << "5 argument - first thread priority" << std::endl;
+		std::cout << "6 argument - second thread priority" << std::endl;
+		std::cout << "7 argument - third thread priority" << std::endl;
 
-	threads_runner(&bmp, 5, atoi(argv[3]), atoi(argv[4]));
+		exit(0);
+	}
 
-	bmp.save(argv[2]);
+	int threads_count = atoi(argv[3]);
 
-	std::cout << "Time: " << (timeGetTime() - start) << std::endl;
+	bitmap init_bmp{ argv[1] };
+	bitmap blur_bmp{ argv[1] };
+
+	int* priorities = new int[threads_count];
+	for (int i = 0; i < threads_count; i++) {
+		priorities[i] = atoi(argv[i + 5]);
+	}
+
+	threads_runner(&init_bmp, &blur_bmp, 5, threads_count, atoi(argv[4]), priorities);
+
+	blur_bmp.save(argv[2]);
 
 	return 0;
 }
