@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <windows.h>
 #include <string>
+#include "LogBuffer.h"
+
 constexpr auto M_PI = 3.141592653589793238462643383279502884L;
 
 #pragma comment(lib, "winmm.lib")
@@ -223,6 +225,7 @@ struct Params {
 
 void blur(bitmap* init_bmp, bitmap* blur_bmp, int radius, Params* params)
 {
+	LogBuffer logBuffer;
 	float rs = ceil(radius * 2.57);
 	for (int i = params->startHeight; i < params->endHeight; ++i)
 	{
@@ -255,7 +258,7 @@ void blur(bitmap* init_bmp, bitmap* blur_bmp, int radius, Params* params)
 			pixel->g = std::round(g / count);
 			pixel->b = std::round(b / count);
 
-			*params->out << params->number << "   " << (int)(timeGetTime() - start) << std::endl;
+			logBuffer.log(params->number);
 		}
 	}
 }
