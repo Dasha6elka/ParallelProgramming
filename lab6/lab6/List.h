@@ -6,7 +6,6 @@ class List {
 private:
 	Node* head;
 	int count = 0;
-	Node* Prev(Node *);
 
 public:
 	List() {
@@ -17,6 +16,7 @@ public:
 	int getCount();
 	bool isEmpty();
 	Node* Next(Node*);
+	Node* Prev(Node*);
 	Node* getFirst();
 	Node* getLast();
 	Node* Add(int, Node*);

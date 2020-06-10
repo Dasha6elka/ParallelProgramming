@@ -4,10 +4,6 @@ int List::getValue(Node* node) {
 	return node->field;
 }
 
-void List::setValue(Node* node, int value) {
-	node->field = value;
-}
-
 int List::getCount() {
 	return count;
 }
@@ -30,14 +26,13 @@ Node* List::Prev(Node* node) {
 	}
 	Node* current = head;
 	while (current->ptr != node) {
+		if (current->ptr == nullptr) {
+			return nullptr;
+		}
 		current = current->ptr;
 	}
 
 	return current;
-}
-
-Node* List::getFirst() {
-	return head;
 }
 
 Node* List::getLast() {
@@ -67,24 +62,6 @@ Node* List::Add(int value, Node* node = nullptr) {
 	node->ptr = element;
 
 	return element;
-}
-
-Node* List::Delete(Node* node) {
-	if (node == nullptr) {
-		return nullptr;
-	}
-	count--;
-	if (node == head) {
-		head = node->ptr;
-		delete node;
-
-		return head;
-	}
-	Node* prev = Prev(node);
-	prev->ptr = node->ptr;
-	delete node;
-
-	return prev;
 }
 
 void List::Clear() {

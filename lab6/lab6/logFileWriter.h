@@ -13,15 +13,14 @@ struct Data {
 };
 
 class LogFileWriter {
-	std::ofstream file{ "output.txt" };
 
 public: 
-	void logFile(List list) {
+	void logFile(List list, std::ofstream* file) {
 		HANDLE* handles = new HANDLE[1];
 
 		Data data;
 		data.list = list;
-		data.file = &file;
+		data.file = file;
 
 		handles[0] = CreateThread(NULL, 0, &LogSizeMonitoringThread, &data, CREATE_SUSPENDED, NULL);
 
@@ -35,13 +34,13 @@ DWORD WINAPI LogSizeMonitoringThread(CONST LPVOID lpParam)
 {
 	struct Data* data = (struct Data*)lpParam;
 
-	Node* first = data->list.getFirst();
-	while (first != nullptr) {
+	Node* last = data->list.getLast();
+	while (last != nullptr) {
 		List list = data->list;
-		int value = list.getValue(first);
-		*data->file << *((int*)value) << std::endl;
-		first = data->list.Next(first);
+		int value = list.getValue(last);
+		*data->file << value << std::endl;
+		last = data->list.Prev(last);
 	}
 
-	ExitThread(0); // функция устанавливает код завершения потока в 0
+	ExitThread(0);
 }

@@ -258,8 +258,8 @@ void blur(bitmap* init_bmp, bitmap* blur_bmp, int radius, Params* params)
 			pixel->b = std::round(b / count);
 
 			int time = timeGetTime() - start;
-			logBuffer.log(time);
-			//*params->out << params->number << "   " << (int)(timeGetTime() - start) << std::endl;
+			logBuffer.log(time, params->out);
+			//*params->out << params->number << "   " << time << std::endl;
 		}
 	}
 }
@@ -275,7 +275,7 @@ DWORD WINAPI ThreadProc(CONST LPVOID lpParam)
 		params->endWidth = ((params->number + 1) * params->partWidth) + (params->number == params->countThreads - 1 ? params->wRemaining : 0);
 		blur(params->init_bmp, params->blur_bmp, 5, params);
 	}
-	ExitThread(0); // функция устанавливает код завершения потока в 0
+	ExitThread(0);
 }
 
 void threads_runner(bitmap* init_bmp, bitmap* blur_bmp, int radius, int threadsCount, int coreCount, int* priorities)
@@ -306,7 +306,6 @@ void threads_runner(bitmap* init_bmp, bitmap* blur_bmp, int radius, int threadsC
 		arrayParams[i] = params;
 	}
 
-	// создание потоков
 	HANDLE* handles = new HANDLE[threadsCount];
 	for (int i = 0; i < threadsCount; i++)
 	{
@@ -315,12 +314,10 @@ void threads_runner(bitmap* init_bmp, bitmap* blur_bmp, int radius, int threadsC
 		SetThreadPriority(handles[i], priorities[i]);
 	}
 
-	// запуск потоков
 	for (int i = 0; i < threadsCount; i++) {
 		ResumeThread(handles[i]);
 	}
 
-	// ожидание окончания работы потоков
 	WaitForMultipleObjects(threadsCount, handles, true, INFINITE);
 }
 
