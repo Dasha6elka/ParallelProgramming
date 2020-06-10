@@ -1,5 +1,4 @@
-﻿#include "pch.h"
-#include <iostream>
+﻿#include <iostream>
 #include <fstream>
 #include <algorithm>
 #include <windows.h>
@@ -258,7 +257,9 @@ void blur(bitmap* init_bmp, bitmap* blur_bmp, int radius, Params* params)
 			pixel->g = std::round(g / count);
 			pixel->b = std::round(b / count);
 
-			logBuffer.log(params->number);
+			int time = timeGetTime() - start;
+			logBuffer.log(time);
+			//*params->out << params->number << "   " << (int)(timeGetTime() - start) << std::endl;
 		}
 	}
 }
@@ -330,7 +331,7 @@ int main(int argc, const char** argv)
 	if (strcmp(argv[1], "/") == 0) {
 		std::cout << "Example: /Users/Dasha6elka/Desktop/leaf.bmp /Users/Dasha6elka/Desktop/blurred-leaf.bmp 3 3 0 0 0" << std::endl;
 		std::cout << "1 argument - input bmp file" << std::endl;
-		std::cout << "1 argument - output bmp file" << std::endl;
+		std::cout << "2 argument - output bmp file" << std::endl;
 		std::cout << "3 argument - threads count" << std::endl;
 		std::cout << "4 argument - core count" << std::endl;
 		std::cout << "Priority: `-1` - below_normal; `0` - normal; `1` - above_normal" << std::endl;

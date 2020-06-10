@@ -23,7 +23,7 @@ public:
 		data.list = list;
 		data.file = &file;
 
-		handles[0] = CreateThread(NULL, 0, &ThreadProc, &data, CREATE_SUSPENDED, NULL);
+		handles[0] = CreateThread(NULL, 0, &LogSizeMonitoringThread, &data, CREATE_SUSPENDED, NULL);
 
 		ResumeThread(handles[0]);
 
@@ -31,13 +31,15 @@ public:
 	}
 };
 
-DWORD WINAPI ThreadProc(CONST LPVOID lpParam)
+DWORD WINAPI LogSizeMonitoringThread(CONST LPVOID lpParam)
 {
 	struct Data* data = (struct Data*)lpParam;
 
 	Node* first = data->list.getFirst();
 	while (first != nullptr) {
-		*data->file << "Stream number " << *((int*)data->list.getValue(first)) << " doing his job" << std::endl;
+		List list = data->list;
+		int value = list.getValue(first);
+		*data->file << *((int*)value) << std::endl;
 		first = data->list.Next(first);
 	}
 

@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\blur\blur\pch.cpp" />
     <ClCompile Include="lab6.cpp" />
+    <ClCompile Include="List.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\blur\blur\pch.h" />
