@@ -1,10 +1,10 @@
+#pragma once
+
 #include <windows.h>
 #include <stdio.h>
 #include "fstream"
 #include "List.h"
 
-HANDLE ghWriteEvent;
-HANDLE ghThreads[1];
 DWORD WINAPI LogSizeMonitoringThread(LPVOID);
 
 struct Data {
@@ -29,18 +29,3 @@ public:
 		WaitForMultipleObjects(1, handles, true, INFINITE);
 	}
 };
-
-DWORD WINAPI LogSizeMonitoringThread(CONST LPVOID lpParam)
-{
-	struct Data* data = (struct Data*)lpParam;
-
-	Node* last = data->list.getLast();
-	while (last != nullptr) {
-		List list = data->list;
-		int value = list.getValue(last);
-		*data->file << value << std::endl;
-		last = data->list.Prev(last);
-	}
-
-	ExitThread(0);
-}

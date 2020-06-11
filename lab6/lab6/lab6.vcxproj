@@ -154,6 +154,8 @@
     <ClCompile Include="..\..\blur\blur\pch.cpp" />
     <ClCompile Include="lab6.cpp" />
     <ClCompile Include="List.cpp" />
+    <ClCompile Include="LogBuffer.cpp" />
+    <ClCompile Include="logFileWriter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\blur\blur\pch.h" />
