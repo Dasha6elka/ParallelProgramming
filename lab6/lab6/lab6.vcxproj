@@ -153,16 +153,13 @@
   <ItemGroup>
     <ClCompile Include="..\..\blur\blur\pch.cpp" />
     <ClCompile Include="lab6.cpp" />
-    <ClCompile Include="List.cpp" />
     <ClCompile Include="LogBuffer.cpp" />
-    <ClCompile Include="logFileWriter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\blur\blur\pch.h" />
-    <ClInclude Include="List.h" />
-    <ClInclude Include="logBuffer.h" />
-    <ClInclude Include="logFileWriter.h" />
-    <ClInclude Include="Node.h" />
+    <ClInclude Include="LinkedLIst.h" />
+    <ClInclude Include="LogBuffer.h" />
+    <ClInclude Include="LogFileWriter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

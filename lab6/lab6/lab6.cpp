@@ -220,11 +220,11 @@ struct Params {
 	int hRemaining;
 	int wRemaining;
 	std::ofstream* out;
+	LogBuffer* logBuffer;
 };
 
 void blur(bitmap* init_bmp, bitmap* blur_bmp, int radius, Params* params)
 {
-	LogBuffer logBuffer;
 	float rs = ceil(radius * 2.57);
 	for (int i = params->startHeight; i < params->endHeight; ++i)
 	{
@@ -258,8 +258,8 @@ void blur(bitmap* init_bmp, bitmap* blur_bmp, int radius, Params* params)
 			pixel->b = std::round(b / count);
 
 			int time = timeGetTime() - start;
-			logBuffer.log(time, params->out);
-			//*params->out << params->number << "   " << time << std::endl;
+			params->logBuffer->Log(time);
+			*params->out << params->number << "   " << time << std::endl;
 		}
 	}
 }
@@ -278,7 +278,7 @@ DWORD WINAPI ThreadProc(CONST LPVOID lpParam)
 	ExitThread(0);
 }
 
-void threads_runner(bitmap* init_bmp, bitmap* blur_bmp, int radius, int threadsCount, int coreCount, int* priorities)
+void threads_runner(bitmap* init_bmp, bitmap* blur_bmp, int radius, int threadsCount, int coreCount, int* priorities, LogBuffer* logBuffer)
 {
 	int partWidth = init_bmp->getWidth() / threadsCount;
 	int partHeight = init_bmp->getHeight() / threadsCount;
@@ -303,6 +303,7 @@ void threads_runner(bitmap* init_bmp, bitmap* blur_bmp, int radius, int threadsC
 		params.hRemaining = heightRemaining;
 		params.wRemaining = widthRemaining;
 		params.out = &files[i];
+		params.logBuffer = logBuffer;
 		arrayParams[i] = params;
 	}
 
@@ -349,7 +350,9 @@ int main(int argc, const char** argv)
 		priorities[i] = atoi(argv[i + 5]);
 	}
 
-	threads_runner(&init_bmp, &blur_bmp, 5, threads_count, atoi(argv[4]), priorities);
+	LogBuffer logBuffer;
+
+	threads_runner(&init_bmp, &blur_bmp, 5, threads_count, atoi(argv[4]), priorities, &logBuffer);
 
 	blur_bmp.save(argv[2]);
 
